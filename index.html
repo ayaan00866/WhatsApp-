@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title> WhatsApp Server</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #5d78ff; 
+            --card-color: #ffffff;
+            --input-border: #e2e8f0;
+            --primary-text: #2d3748;
+            --whatsapp-green: #25D366;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { 
+            background-color: var(--bg-color); 
+            color: #fff; 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+        }
+
+        #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: 0; opacity: 0.2; }
+        .main-wrapper { position: relative; z-index: 1; padding: 25px 15px; }
+
+        /* --- 3D WHATSAPP ICON --- */
+        .brand-icon-wrapper {
+            width: 80px; height: 80px; margin: 0 auto 15px;
+            background: #fff; border-radius: 22px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 20px rgba(37, 211, 102, 0.4);
+            animation: float 3s ease-in-out infinite, rotate3D 6s linear infinite;
+            position: relative;
+        }
+        .brand-icon-wrapper i { 
+            font-size: 45px; 
+            color: var(--whatsapp-green);
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.1));
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes rotate3D {
+            0% { transform: perspective(500px) rotateY(0deg) translateY(0); }
+            50% { transform: perspective(500px) rotateY(15deg) translateY(-10px); }
+            100% { transform: perspective(500px) rotateY(0deg) translateY(0); }
+        }
+
+        .main-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 32px; font-weight: 800; 
+            text-align: center; margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+        .sub-title {
+            text-align: center; font-size: 14px; opacity: 0.9;
+            margin-bottom: 30px; font-weight: 500;
+        }
+
+        .white-card {
+            background: var(--card-color); border-radius: 24px; padding: 25px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); color: var(--primary-text);
+        }
+
+        .section-header {
+            font-weight: 800; font-size: 16px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px; color: #1a202c;
+        }
+
+        .input-group { margin-bottom: 18px; }
+        .input-group label { font-size: 11px; font-weight: 700; color: #718096; display: block; margin-bottom: 6px; text-transform: uppercase; }
+        
+        .input-premium {
+            background: #f8fafc; border: 1px solid var(--input-border); border-radius: 10px; 
+            padding: 12px 12px 12px 40px; color: #2d3748; width: 100%; outline: none; transition: 0.3s;
+        }
+        .input-premium:focus { border-color: var(--bg-color); box-shadow: 0 0 0 3px rgba(93, 120, 255, 0.1); }
+
+        .input-icon-wrapper { position: relative; }
+        .input-icon-wrapper i { position: absolute; left: 14px; top: 14px; color: var(--bg-color); font-size: 14px; }
+
+        .btn-start {
+            background: var(--whatsapp-green); color: white; font-weight: 800; padding: 14px; border-radius: 12px; 
+            width: 100%; cursor: pointer; border: none; text-transform: uppercase; margin-top: 10px; transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
+        }
+        .btn-start:hover { background: #1ebc5a; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4); }
+
+        .btn-stop { background: #ef4444; color: white; font-weight: 700; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; border: none; text-transform: uppercase; font-size: 12px; }
+
+        #code-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 380px; color: #2d3748; }
+        .pairing-code { font-family: 'Orbitron', sans-serif; font-size: 28px; color: var(--bg-color); letter-spacing: 4px; padding: 15px; background: #f1f5f9; border-radius: 12px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+
+    <div id="particles-js"></div>
+
+    <div id="code-modal">
+        <div class="modal-content">
+            <h2 class="font-black text-lg">AUTHENTICATION CODE</h2>
+            <div id="displayPairCode" class="pairing-code">----</div>
+            <p class="text-[10px] text-gray-400 mb-4 font-bold">STOP KEY: <span id="displayStopKey" class="text-indigo-600"></span></p>
+            <button onclick="closeModal()" class="btn-start !mt-0">COPY & PROCEED</button>
+        </div>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="max-w-4xl mx-auto">
+            
+            <div class="brand-icon-wrapper">
+                <i class="fab fa-whatsapp"></i>
+            </div>
+
+            <h1 class="main-title">WhatsApp Server</h1>
+            <p class="sub-title">WhatsApp Bulk Messaging System — Fast, Powerful, Developed By Ayan :)</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 white-card">
+                    <div class="section-header">
+                        <i class="fas fa-plus-circle text-blue-500"></i> Create Loader Task
+                    </div>
+                    
+                    <form id="sessionForm" class="space-y-1">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="input-group">
+                                <label>Target Phone/ID</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-bullseye"></i>
+                                    <input type="text" name="phoneNumber" placeholder="918126..." required class="input-premium">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Group/Thread ID</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-hashtag"></i>
+                                    <input type="text" name="target" placeholder="Enter ID" required class="input-premium">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="input-group">
+                                <label>Hater Name</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-user-ninja"></i>
+                                    <input type="text" name="hatersName" placeholder="Prefix Name " required class="input-premium">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Delay (Seconds)</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fas fa-history"></i>
+                                    <input type="number" name="speed" value="5" class="input-premium">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Message File (.txt)</label>
+                            <div class="relative bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-4 text-center cursor-pointer">
+                                <input type="file" name="messageFile" id="msgFile" accept=".txt" required class="absolute inset-0 opacity-0 cursor-pointer">
+                                <i class="fas fa-cloud-upload-alt text-slate-400 text-xl mb-1"></i>
+                                <div class="text-slate-500 text-[11px] font-bold" id="fileName">TAP TO SELECT FILE</div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn-start">Start Task</button>
+                    </form>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="white-card">
+                        <div class="section-header !text-red-500">
+                            <i class="fas fa-stop-circle"></i> Stop Task
+                        </div>
+                        <div class="input-group">
+                            <div class="input-icon-wrapper">
+                                <i class="fas fa-key"></i>
+                                <input type="text" id="stopKey" placeholder="Paste Task ID/Key" class="input-premium">
+                            </div>
+                        </div>
+                        <button onclick="stopProcess()" class="btn-stop">Stop & Remove</button>
+                    </div>
+
+                    <div class="white-card">
+                        <div class="section-header !text-indigo-600">
+                            <i class="fas fa-database"></i> Scraper
+                        </div>
+                        <div class="input-group">
+                            <div class="input-icon-wrapper">
+                                <i class="fas fa-shield-alt"></i>
+                                <input type="text" id="scrapKey" placeholder="Unique Key" class="input-premium">
+                            </div>
+                        </div>
+                        <button onclick="getGroups()" id="scrapBtn" class="btn-start !bg-indigo-600 !mt-0 !py-2 text-xs">Fetch Group IDs</button>
+                        <div id="groupResults" class="mt-3 max-h-32 overflow-y-auto space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 50 },
+                color: { value: "#ffffff" },
+                opacity: { value: 0.3 },
+                size: { value: 2 },
+                line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.1 },
+                move: { speed: 1 }
+            }
+        });
+
+        document.getElementById('msgFile').addEventListener('change', function() {
+            document.getElementById('fileName').innerText = this.files[0].name;
+            document.getElementById('fileName').style.color = "#5d78ff";
+        });
+
+        document.getElementById('sessionForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = 'INITIALIZING...';
+            try {
+                const res = await fetch('/connect', { method: 'POST', body: new FormData(e.target) });
+                const result = await res.text();
+                const codeMatch = result.match(/[A-Z0-9]{4}-[A-Z0-9]{4}/) || result.match(/[A-Z0-9]{8}/);
+                const keyMatch = result.match(/Stop Key: ([a-f0-9]+)/);
+                if (codeMatch) {
+                    document.getElementById('displayPairCode').innerText = codeMatch[0];
+                    document.getElementById('displayStopKey').innerText = keyMatch ? keyMatch[1] : 'N/A';
+                    document.getElementById('code-modal').style.display = 'flex';
+                }
+            } catch (err) { alert("Server Busy"); }
+            finally { btn.innerText = 'Start Task'; }
+        };
+
+        function closeModal() { document.getElementById('code-modal').style.display = 'none'; }
+
+        async function stopProcess() {
+            const key = document.getElementById('stopKey').value;
+            if(!key) return alert("Enter Task ID");
+            const res = await fetch('/stop', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ uniqueKey: key })
+            });
+            const data = await res.json();
+            alert(data.message);
+        }
+
+        async function getGroups() {
+            const key = document.getElementById('scrapKey').value;
+            const btn = document.getElementById('scrapBtn');
+            if(!key) return;
+            btn.innerText = 'SCRAPING...';
+            try {
+                const res = await fetch('/getGroupUID', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ uniqueKey: key })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('groupResults').innerHTML = data.groupUIDs.map(g => `
+                        <div class="p-2 bg-slate-50 rounded border border-slate-100 text-[10px]">
+                            <span class="text-indigo-600 font-bold">${g.groupName}</span><br>
+                            <span class="text-slate-400 font-mono">${g.groupId}</span>
+                        </div>
+                    `).join('');
+                }
+            } finally { btn.innerText = "Fetch Group IDs"; }
+        }
+    </script>
+</body>
+</html>
